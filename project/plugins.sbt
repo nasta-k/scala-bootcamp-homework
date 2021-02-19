@@ -1,0 +1,1 @@
+addSbtPlugin("sbt.plugins" % "bulky-source-plugin" % "0.1")
