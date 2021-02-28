@@ -2,23 +2,18 @@ package basics
 
 
 import scala.io.Source
+import scala.util.{Failure, Success, Try}
 
 object ControlStructures {
 
   sealed trait Command
 
   object Command {
-
     final case class Divide(dividend: Double, divisor: Double) extends Command
-
     final case class Sum(numbers: List[Double]) extends Command
-
     final case class Average(numbers: List[Double]) extends Command
-
     final case class Min(numbers: List[Double]) extends Command
-
     final case class Max(numbers: List[Double]) extends Command
-
   }
 
   final case class ErrorMessage(value: String)
@@ -28,23 +23,27 @@ object ControlStructures {
   final case class Result(command: String, numbers: List[Double], result: Double)
 
   def parseCommand(x: String): Either[ErrorMessage, Command] = {
+    import Command._
     val commandList: List[String] = x.split(" ").toList.filter(_ != "")
-    try {
-      val doubleTail: List[Double] = commandList.tail.map(_.toDouble)
-      commandList match {
-        case _ :: Nil => Left(ErrorMessage(s"$errorPrefix empty data"))
-        case "divide" :: _ => Right(Command.Divide(doubleTail.head, doubleTail(1)))
-        case "sum" :: _ => Right(Command.Sum(doubleTail))
-        case "average" :: _ => Right(Command.Average(doubleTail))
-        case "min" :: _ => Right(Command.Min(doubleTail))
-        case "max" :: _ => Right(Command.Max(doubleTail))
-        case _ => Left(ErrorMessage(s"$errorPrefix invalid command"))
+    commandList match {
+      case _ :: Nil => Left(ErrorMessage(s"$errorPrefix empty arguments"))
+      case x :: xs => Try(xs.map(_.toDouble)) match {
+        case Success(args) => (x, args) match {
+          case ("divide", arg) => arg match {
+            case List(dividend, divisor) => Right(Divide(dividend, divisor))
+            case _ => Left(ErrorMessage(s"$errorPrefix invalid divide arguments"))
+          }
+          case ("sum", args) => Right(Sum(args))
+          case ("average", args) => Right(Average(args))
+          case ("min", args) => Right(Min(args))
+          case ("max", args) => Right(Max(args))
+        }
+        case Failure(_) => Left(ErrorMessage(s"$errorPrefix invalid arguments"))
       }
-    }
-    catch {
-      case _: NumberFormatException => Left(ErrorMessage(s"$errorPrefix invalid data"))
+      case Nil => Left(ErrorMessage(s"$errorPrefix empty data"))
     }
   }
+
 
   def calculate(x: Command): Either[ErrorMessage, Result] = x match {
     case Command.Divide(dividend, divisor) => divisor match {
@@ -59,13 +58,15 @@ object ControlStructures {
 
   import java.text.DecimalFormat
 
-  val decimalFormat = new DecimalFormat("#.#")
+  val decimalFormat = new DecimalFormat("#.###")
+
+  private def formatOutput(number: Double) = decimalFormat.format(number)
 
   def renderResult(x: Result): String = {
-    val numbers = x.numbers.map(decimalFormat.format)
+    val numbers = x.numbers.map(formatOutput)
     x.command match {
-      case "divide" => s"${numbers.head} divided by ${numbers.tail.head} is ${x.result.toInt}"
-      case _ => s"the ${x.command} of${numbers.foldLeft("")((a, b) => a + " " + b)} is ${x.result.toInt}"
+      case "divide" => s"${numbers.head} divided by ${numbers.tail.head} is ${formatOutput(x.result)}"
+      case _ => s"the ${x.command} of${numbers.foldLeft("")((a, b) => a + " " + b)} is ${formatOutput(x.result)}"
     }
   }
 
