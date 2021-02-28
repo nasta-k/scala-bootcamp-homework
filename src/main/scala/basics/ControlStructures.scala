@@ -9,11 +9,17 @@ object ControlStructures {
   sealed trait Command
 
   object Command {
+
     final case class Divide(dividend: Double, divisor: Double) extends Command
+
     final case class Sum(numbers: List[Double]) extends Command
+
     final case class Average(numbers: List[Double]) extends Command
+
     final case class Min(numbers: List[Double]) extends Command
+
     final case class Max(numbers: List[Double]) extends Command
+
   }
 
   final case class ErrorMessage(value: String)
@@ -37,6 +43,7 @@ object ControlStructures {
           case ("average", args) => Right(Average(args))
           case ("min", args) => Right(Min(args))
           case ("max", args) => Right(Max(args))
+          case (_, _) => Left(ErrorMessage(s"$errorPrefix unknown command"))
         }
         case Failure(_) => Left(ErrorMessage(s"$errorPrefix invalid arguments"))
       }
