@@ -36,6 +36,7 @@ object Task2 {
     }
 
   }
+
   // TODO: create Show instance for User
   // TODO: create syntax for Show so i can do User("1", "Oleg").show
 }
@@ -76,6 +77,18 @@ object Task4 {
   // just a try, not sure at all
   trait KindaEqual[A, B] {
     def ===(a: A)(b: B): Boolean
+  }
+
+  implicit val stringKindaEqualsInt: KindaEqual[String, Int] = new KindaEqual[String, Int] {
+    override def ===(a: String)(b: Int): Boolean = a.eq(b.toString)
+  }
+
+  object KindaEqualSyntax {
+    implicit class KindaEqualOps[A](a: A) {
+      def ===[B](b: B)(implicit k: KindaEqual[A, B]): Boolean = {
+        k.===(a)(b)
+      }
+    }
   }
   // TODO: design a typesafe equals so i can do a === b, but it won't compile if a and b are of different types
   // define the typeclass (think of a method signature)
